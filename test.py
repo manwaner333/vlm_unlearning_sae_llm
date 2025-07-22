@@ -1,4 +1,4 @@
-from transformers import LlavaNextProcessor, LlavaNextForConditionalGeneration
+from transformers import LlavaNextProcessor, LlavaNextForConditionalGeneration, MllamaForConditionalGeneration, AutoProcessor
 import torch
 from PIL import Image
 import requests
@@ -21,10 +21,10 @@ from tqdm import tqdm, trange
 #   return batch_of_images
       
       
-processor = LlavaNextProcessor.from_pretrained("llava-hf/llava-v1.6-vicuna-7b-hf")
+# processor = LlavaNextProcessor.from_pretrained("llava-hf/llava-v1.6-vicuna-7b-hf")
 
-model = LlavaNextForConditionalGeneration.from_pretrained("llava-hf/llava-v1.6-vicuna-7b-hf", torch_dtype=torch.float16, low_cpu_mem_usage=True) 
-model.to("cuda:0")
+# model = LlavaNextForConditionalGeneration.from_pretrained("llava-hf/llava-v1.6-vicuna-7b-hf", torch_dtype=torch.float16, low_cpu_mem_usage=True) 
+# model.to("cuda:0")
 
 # # prepare image and text prompt, using the appropriate prompt template
 # # url = "https://github.com/haotian-liu/LLaVA/blob/1a91fc274d7c35a9b50b3cb29c4247ae5837ce39/images/llava_v1_5_radar.jpg?raw=true"
@@ -58,28 +58,28 @@ model.to("cuda:0")
 # iterable_dataset = iter(dataset)
 
 # device = ""
-from datasets import load_dataset
-dataset = load_dataset("evanarlian/imagenet_1k_resized_256", split="train")
+# from datasets import load_dataset
+# dataset = load_dataset("evanarlian/imagenet_1k_resized_256", split="train")
         
-image_key = 'image'
-label_key = 'label'
+# image_key = 'image'
+# label_key = 'label'
 
-labels = dataset.features[label_key].names
-dataset = dataset.shuffle(seed=42)
-iterable_dataset = iter(dataset)
+# labels = dataset.features[label_key].names
+# dataset = dataset.shuffle(seed=42)
+# iterable_dataset = iter(dataset)
 
         
 
-key1 = "What is shown in this image?"     # "What is t he full name of the person in the image?"
-key2 = "What is shown in this image?" 
-batch_of_images = []
-with torch.no_grad():
-  for _ in trange(2, desc = "Filling activation store with images"):
-    try:
-      batch_of_images.append(next(iterable_dataset)[image_key])
-    except StopIteration:
-      iterable_dataset = iter(dataset.shuffle())
-      batch_of_images.append(next(iterable_dataset)[image_key])
+# key1 = "What is shown in this image?"     # "What is t he full name of the person in the image?"
+# key2 = "What is shown in this image?" 
+# batch_of_images = []
+# with torch.no_grad():
+#   for _ in trange(2, desc = "Filling activation store with images"):
+#     try:
+#       batch_of_images.append(next(iterable_dataset)[image_key])
+#     except StopIteration:
+#       iterable_dataset = iter(dataset.shuffle())
+#       batch_of_images.append(next(iterable_dataset)[image_key])
 
 # def conversation_form(key):
 #   conversation = [
@@ -106,43 +106,43 @@ with torch.no_grad():
 # # Define a chat histiry and use `apply_chat_template` to get correctly formatted prompt
 # # Each value in "content" has to be a list of dicts with types ("text", "image") 
 
-conversation1 = [
-    {
-      "role": "user",
-      "content": [
-          {"type": "text", "text": key1},
-          {"type": "image"},
-        ],
-    },
-]
-conversation2 = [
-    {
-      "role": "user",
-      "content": [
-          {"type": "text", "text": key2},
-          {"type": "image"},
-        ],
-    },
-]
+# conversation1 = [
+#     {
+#       "role": "user",
+#       "content": [
+#           {"type": "text", "text": key1},
+#           {"type": "image"},
+#         ],
+#     },
+# ]
+# conversation2 = [
+#     {
+#       "role": "user",
+#       "content": [
+#           {"type": "text", "text": key2},
+#           {"type": "image"},
+#         ],
+#     },
+# ]
 
-prompt1 = processor.apply_chat_template(conversation1, add_generation_prompt=True)
-prompt2 = processor.apply_chat_template(conversation2, add_generation_prompt=True)
+# prompt1 = processor.apply_chat_template(conversation1, add_generation_prompt=True)
+# prompt2 = processor.apply_chat_template(conversation2, add_generation_prompt=True)
 
 
-# batch_of_prompts = []
-# for ele in batch_of_conversations:
-#   batch_of_prompts.append(processor.apply_chat_template(ele, add_generation_prompt=True))
+# # batch_of_prompts = []
+# # for ele in batch_of_conversations:
+# #   batch_of_prompts.append(processor.apply_chat_template(ele, add_generation_prompt=True))
 
-batch_of_prompts = [prompt1, prompt2]  
+# batch_of_prompts = [prompt1, prompt2]  
 
-inputs = processor(images=batch_of_images, text=batch_of_prompts, padding=True, return_tensors="pt").to("cuda:0")
+# inputs = processor(images=batch_of_images, text=batch_of_prompts, padding=True, return_tensors="pt").to("cuda:0")
 
-qingli = 3
-# # autoregressively complete prompt
-output = model.generate(**inputs, max_new_tokens=100)
+# qingli = 3
+# # # autoregressively complete prompt
+# output = model.generate(**inputs, max_new_tokens=100)
 
-print(processor.decode(output[0], skip_special_tokens=True))
-print(processor.decode(output[1], skip_special_tokens=True))
+# print(processor.decode(output[0], skip_special_tokens=True))
+# print(processor.decode(output[1], skip_special_tokens=True))
 
 
 
@@ -253,3 +253,36 @@ print(processor.decode(output[1], skip_special_tokens=True))
 
 # zero_ablation_hooks = [Hook(sparse_autoencoder.cfg.block_layer, sparse_autoencoder.cfg.module_name, zero_ablation, return_module_output=False)]
 # zero_ablation_loss = model.model.run_with_hooks(zero_ablation_hooks, return_type='loss', **model_inputs).item()
+
+
+
+
+
+model_id = "meta-llama/Llama-3.2-11B-Vision-Instruct"
+
+model = MllamaForConditionalGeneration.from_pretrained(
+    model_id,
+    torch_dtype=torch.bfloat16,
+    device_map="auto",
+)
+processor = AutoProcessor.from_pretrained(model_id)
+
+url = "https://huggingface.co/datasets/huggingface/documentation-images/resolve/0052a70beed5bf71b92610a43a52df6d286cd5f3/diffusers/rabbit.jpg"
+image = Image.open(requests.get(url, stream=True).raw)
+
+messages = [
+    {"role": "user", "content": [
+        {"type": "image"},
+        {"type": "text", "text": "Please describe the content of this image."}
+    ]}
+]
+input_text = processor.apply_chat_template(messages, add_generation_prompt=True)
+inputs = processor(
+    image,
+    input_text,
+    add_special_tokens=False,
+    return_tensors="pt"
+).to(model.device)
+
+output = model.generate(**inputs, max_new_tokens=30)
+print(processor.decode(output[0]))

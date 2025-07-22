@@ -96,6 +96,7 @@ class SparseAutoencoder(HookedRootModule):
         
         # 如果要进行攻击
         # topk_values, topk_indices = torch.topk(feature_acts, k=10, dim=1)
+        # print(topk_indices)
         # 打印索引
         # topk_indices = [353,  5651, 23963,  2089, 53008, 61542, 47890, 41536, 61615]
         # print(topk_indices)
@@ -105,8 +106,9 @@ class SparseAutoencoder(HookedRootModule):
         # topk_values, topk_indices = torch.topk(feature_acts, k=10, dim=1)
         # print(topk_indices)
         # topk_indices = [353, 5651, 53008, 47890, 2089]
-        # for index in topk_indices:
-        #     feature_acts[0, index] = feature_acts[0, index] * (-1.0)
+        topk_indices = [25169, 48322, 56952, 52238, 8221, 30054, 353, 30682]
+        for index in topk_indices:
+            feature_acts[0, index] = feature_acts[0, index] * (-5.0)
         
         sae_out = self.hook_sae_out(
             einops.einsum(
